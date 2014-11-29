@@ -3,7 +3,6 @@
     "description":"",
     "parameters":[],
     "dependencies":[],
-    "main":""
 }
 
 # $name/done.sh
