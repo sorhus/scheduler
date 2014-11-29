@@ -21,9 +21,8 @@ public class Main {
         );
         List<JobSpecification> jobSpecifications = getJobSpecFromString(jobSpecsArg);
 
-        new Pipe(jobSpecifications);
+        new Pipe(jobSpecifications, 2);
 
-        System.exit(0);
     }
 
 
