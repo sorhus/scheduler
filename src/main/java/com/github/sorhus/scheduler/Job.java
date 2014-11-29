@@ -1,5 +1,7 @@
 package com.github.sorhus.scheduler;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -11,11 +13,15 @@ public class Job {
 
     private final String name;
     private final String parameters;
-    private final List<Job> dependencies;
-    private final List<Job> dependents;
+
+    private List<Job> dependencies;
+    private List<Job> dependents;
 
     private boolean done;
     private boolean dormant;
+
+    private ImmutableList.Builder<Job> dependenciesBuilder = ImmutableList.builder();
+    private ImmutableList.Builder<Job> dependentsBuilder = ImmutableList.builder();
 
     public Job(String name) {
         this(name, "");
@@ -24,8 +30,6 @@ public class Job {
     public Job(String name, String parameters) {
         this.name = name;
         this.parameters = parameters;
-        this.dependencies = new LinkedList<>();
-        this.dependents = new LinkedList<>();
         this.done = false;
         this.dormant = true;
     }
@@ -43,7 +47,7 @@ public class Job {
     }
 
     public void addDependency(Job dependency) {
-        dependencies.add(dependency);
+        dependenciesBuilder.add(dependency);
     }
 
     public List<Job> getDependents() {
@@ -51,7 +55,7 @@ public class Job {
     }
 
     public void addDependent(Job dependent) {
-        dependents.add(dependent);
+        dependentsBuilder.add(dependent);
     }
 
     public void setDone(boolean value) {
@@ -70,7 +74,12 @@ public class Job {
         return dormant;
     }
 
-
+    public void finalise() {
+        dependencies = dependenciesBuilder.build();
+        dependenciesBuilder = null;
+        dependents = dependentsBuilder.build();
+        dependentsBuilder = null;
+    }
 
     @Override
     public String toString() {

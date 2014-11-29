@@ -20,7 +20,7 @@ public class JobExecution {
     private IOException e;
     private JobLogger jobLogger;
 
-    private final static Logger log = LoggerFactory.getLogger(JobExecution.class);
+    private final static Logger log = LoggerFactory.getLogger("Pipe");
 
     public JobExecution(Job job) {
         this.job = job;

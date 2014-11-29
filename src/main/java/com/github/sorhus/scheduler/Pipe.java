@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Pipe {
 
-    private final static Logger log = LoggerFactory.getLogger(Pipe.class);
+    private final static Logger log = LoggerFactory.getLogger("Pipe");
 
     public Pipe(List<JobSpecification> jobSpecifications) {
         log.info("New pipe initialising with {} job specifications: {}", jobSpecifications.size(), Joiner.on(", ").join(jobSpecifications));
@@ -34,6 +34,7 @@ public class Pipe {
             .setNameFormat("JobFinaliser-%d").build();
         ExecutorService jobFinaliserExecutorService = Executors.newFixedThreadPool(2, jobFinaliserThreadFactory);
         Queue<Job> jobQueue = new ConcurrentLinkedQueue<>();
+
         AtomicInteger jobCounter = new AtomicInteger(jobFactory.getNumberOfJobs());
         JobFinaliserService jobFinaliserService = new JobFinaliserService(jobFinaliserExecutorService, jobQueue, jobCounter);
 
@@ -51,7 +52,7 @@ public class Pipe {
         while(jobCounter.get() > 0) {
             log.info("Waiting for {} unfinished jobs", jobCounter);
             try {
-                Thread.sleep(3000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {}
         }
         log.info("All jobs finished, SUCCESS");

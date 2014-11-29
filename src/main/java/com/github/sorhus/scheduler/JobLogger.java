@@ -17,8 +17,8 @@ public class JobLogger implements Runnable {
     private final InputStream logStream;
     private final AtomicBoolean keepRunning;
 
-    public JobLogger(String name, InputStream logStream) {
-        this.log = LoggerFactory.getLogger(name);
+    public JobLogger(InputStream logStream) {
+        this.log = LoggerFactory.getLogger("JobLogger");
         this.logStream = logStream;
         this.keepRunning = new AtomicBoolean(true);
     }

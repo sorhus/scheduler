@@ -33,14 +33,18 @@ public class JobFactory {
         for (JobSpecification jobSpecification : jobSpecifications) {
             if(jobSpecification.getParameters().isEmpty()) {
                 Job job = new Job(jobSpecification.getName());
-                jobSpecification.addJob(job);
+                ImmutableList<Job> jobs = ImmutableList.of(job);
+                jobSpecification.setJobs(jobs);
                 nJobs++;
             } else {
+                ImmutableList.Builder<Job> builder = ImmutableList.builder();
                 for (String param : jobSpecification.getParameters()) {
                     Job job = new Job(jobSpecification.getName(), param);
-                    jobSpecification.addJob(job);
-                    nJobs++;
+                    builder.add(job);
                 }
+                List<Job> jobs = builder.build();
+                jobSpecification.setJobs(jobs);
+                nJobs += jobs.size();
             }
         }
         return nJobs;
@@ -59,6 +63,11 @@ public class JobFactory {
                         dependency.addDependent(dependent);
                     }
                 }
+            }
+        }
+        for (JobSpecification jobSpecification : jobSpecsByName.values()) {
+            for (Job job : jobSpecification.getJobs()) {
+                job.finalise();
             }
         }
     }

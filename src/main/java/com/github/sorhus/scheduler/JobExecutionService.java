@@ -15,7 +15,7 @@ public class JobExecutionService {
 
     public JobExecution initialiseJob(Job job) {
         JobExecution jobExecution = new JobExecution(job);
-        JobLogger jobLogger = new JobLogger(job.getName(), jobExecution.getLogStream());
+        JobLogger jobLogger = new JobLogger(jobExecution.getLogStream());
         executorService.submit(jobLogger);
         jobExecution.setJobLogger(jobLogger);
         return jobExecution;

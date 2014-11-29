@@ -15,7 +15,7 @@ public class JobSubmitter implements Runnable {
     private final JobExecutionService jobExecutionService;
     private final JobFinaliserService jobFinaliserService;
 
-    private final static Logger log = LoggerFactory.getLogger(JobSubmitter.class);
+    private final static Logger log = LoggerFactory.getLogger("Pipe");
 
     public JobSubmitter(
         Queue<Job> jobQueue,

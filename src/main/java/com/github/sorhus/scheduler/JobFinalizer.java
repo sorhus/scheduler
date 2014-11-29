@@ -17,7 +17,7 @@ public class JobFinalizer implements Runnable {
     private final AtomicInteger jobCounter;
     private final JobExecution jobExec;
 
-    private final static Logger log = LoggerFactory.getLogger(JobFinalizer.class);
+    private final static Logger log = LoggerFactory.getLogger("Pipe");
 
     public JobFinalizer(
         Queue<Job> jobQueue,
@@ -48,7 +48,7 @@ public class JobFinalizer implements Runnable {
                         approved &= dependency.isDone();
                     }
                     if(approved) {
-                        log.info("All dependencies for Job {} is done, putting it in job queue");
+                        log.info("All dependencies for Job {} is done, putting it in job queue", candidate);
                         candidate.setDormant(false);
                         jobQueue.offer(candidate);
                     }

@@ -1,6 +1,5 @@
 package com.github.sorhus.scheduler;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -57,11 +56,8 @@ public class JobSpecification {
         return jobs;
     }
 
-    protected void addJob(Job job) {
-        if(null == jobs) {
-            jobs = new LinkedList<>();
-        }
-        jobs.add(job);
+    protected void setJobs(List<Job> jobs) {
+        this.jobs = jobs;
     }
 
 
