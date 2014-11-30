@@ -39,7 +39,11 @@ public class JobFinalizer implements Runnable {
         }
 
         if(success) {
-            log.info("Job {} finished, evaluating dependents as candidates for job queue: {}", jobExec, jobExec.getJob().getDependents());
+            log.info(
+                "Job {} finished, evaluating dependents as candidates for job queue: {}",
+                jobExec,
+                jobExec.getJob().getDependents()
+            );
             jobCounter.decrementAndGet();
             for (Job candidate : jobExec.getJob().getDependents()) {
                 synchronized (candidate) {
