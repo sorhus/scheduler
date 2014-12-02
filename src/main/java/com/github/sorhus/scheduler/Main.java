@@ -1,6 +1,8 @@
 package com.github.sorhus.scheduler;
 
 
+import com.github.sorhus.scheduler.job.JobSpecification;
+import com.github.sorhus.scheduler.pipe.Pipe;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;

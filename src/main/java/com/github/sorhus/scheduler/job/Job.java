@@ -1,10 +1,8 @@
-package com.github.sorhus.scheduler;
+package com.github.sorhus.scheduler.job;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author: anton.sorhus@gmail.com

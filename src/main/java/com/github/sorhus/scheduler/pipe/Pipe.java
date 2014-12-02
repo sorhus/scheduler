@@ -1,9 +1,14 @@
-package com.github.sorhus.scheduler;
+package com.github.sorhus.scheduler.pipe;
 
+import com.github.sorhus.scheduler.job.Job;
+import com.github.sorhus.scheduler.job.JobContainer;
+import com.github.sorhus.scheduler.job.JobExecutionService;
+import com.github.sorhus.scheduler.job.JobFinaliserService;
+import com.github.sorhus.scheduler.job.JobSpecification;
+import com.github.sorhus.scheduler.job.JobSubmitter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -30,10 +35,9 @@ public class Pipe implements Runnable {
     private final int workers;
 
     private final AtomicBoolean keepRunning;
-    private final int numberOfJobs;
     private final Queue<Job> jobQueue;
     private final AtomicInteger jobCounter;
-    private final List<Job> entryPoints;
+    private final JobContainer jobContainer;
 
     DateTime startingTime;
     DateTime finishTime;
@@ -55,13 +59,10 @@ public class Pipe implements Runnable {
             jobSpecifications.size(),
             Joiner.on(", ").join(jobSpecifications)
         );
-        JobFactory jobFactory = new JobFactory(jobSpecifications);
-        this.numberOfJobs = jobFactory.getNumberOfJobs();
-        log.info("There were {} jobs in total", numberOfJobs);
+        this.jobContainer = new JobContainer(jobSpecifications);
         this.jobQueue = new ConcurrentLinkedQueue<>();
-        this.jobCounter = new AtomicInteger(jobFactory.getNumberOfJobs());
-        this.entryPoints = jobFactory.getEntryPoints();
-        log.info("Found {} entry points", entryPoints.size());
+        log.info("There were {} jobs in total", jobContainer.getNumberOfJobs());
+        this.jobCounter = new AtomicInteger(jobContainer.getNumberOfJobs());
     }
 
     @Override
@@ -71,7 +72,7 @@ public class Pipe implements Runnable {
         this.startingTime = DateTime.now();
         this.executorServices = initialiseExecutorsAndServices(workers, jobQueue, jobCounter);
 
-        for(Job job: entryPoints) {
+        for(Job job: jobContainer.getEntryPoints()) {
             job.setDormant(false);
             jobQueue.offer(job);
         }
@@ -132,7 +133,7 @@ public class Pipe implements Runnable {
     @Override
     public String toString() {
         JsonObject json = new JsonObject();
-        json.addProperty("Jobs complete", numberOfJobs - jobCounter.get());
+        json.addProperty("Jobs complete", jobContainer.getNumberOfJobs() - jobCounter.get());
         json.addProperty("Jobs left", jobCounter.get());
         json.addProperty("Jobs in queue", jobQueue.size());
         if(null == finishTime) {

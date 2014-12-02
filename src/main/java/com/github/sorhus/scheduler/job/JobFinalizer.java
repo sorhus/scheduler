@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler;
+package com.github.sorhus.scheduler.job;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

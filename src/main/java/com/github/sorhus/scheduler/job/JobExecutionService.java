@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler;
+package com.github.sorhus.scheduler.job;
 
 import java.util.concurrent.ExecutorService;
 

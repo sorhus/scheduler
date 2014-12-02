@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler;
+package com.github.sorhus.scheduler.job;
 
 import com.google.common.collect.ImmutableList;
 
@@ -9,33 +9,41 @@ import java.util.Map;
 /**
  * @author: anton.sorhus@gmail.com
  */
-public class JobFactory {
+public class JobContainer {
 
-    private final int nJobs;
-    private final List<Job> entryPoints;
+    private final List<JobSpecification> jobSpecifications;
+    private final int numberOfJobs;
 
-    public JobFactory(List<JobSpecification> jobSpecifications) {
-        this.nJobs = createJobs(jobSpecifications);
-        resolveDependencies(jobSpecifications);
-        this.entryPoints = getEntryPoints(jobSpecifications);
+    public JobContainer(List<JobSpecification> jobSpecifications) {
+        this.jobSpecifications = jobSpecifications;
+        this.numberOfJobs = createJobs();
+        resolveDependencies();
     }
 
     public int getNumberOfJobs() {
-        return nJobs;
+        return numberOfJobs;
     }
 
     public List<Job> getEntryPoints() {
-        return entryPoints;
+        ImmutableList.Builder<Job> builder = ImmutableList.builder();
+        for (JobSpecification jobSpecification : jobSpecifications) {
+            if(jobSpecification.getDependencies().isEmpty()) {
+                for (Job job : jobSpecification.getJobs()) {
+                    builder.add(job);
+                }
+            }
+        }
+        return builder.build();
     }
 
-    private int createJobs(List<JobSpecification> jobSpecifications) {
-        int nJobs = 0;
+    private int createJobs() {
+        int numberOfJobs = 0;
         for (JobSpecification jobSpecification : jobSpecifications) {
             if(jobSpecification.getParameters().isEmpty()) {
                 Job job = new Job(jobSpecification.getName());
                 ImmutableList<Job> jobs = ImmutableList.of(job);
                 jobSpecification.setJobs(jobs);
-                nJobs++;
+                numberOfJobs++;
             } else {
                 ImmutableList.Builder<Job> builder = ImmutableList.builder();
                 for (String param : jobSpecification.getParameters()) {
@@ -44,13 +52,13 @@ public class JobFactory {
                 }
                 List<Job> jobs = builder.build();
                 jobSpecification.setJobs(jobs);
-                nJobs += jobs.size();
+                numberOfJobs += jobs.size();
             }
         }
-        return nJobs;
+        return numberOfJobs;
     }
 
-    private void resolveDependencies(List<JobSpecification> jobSpecifications) {
+    private void resolveDependencies() {
         Map<String, JobSpecification> jobSpecsByName = new HashMap<>(jobSpecifications.size());
         for (JobSpecification jobSpecification : jobSpecifications) {
             jobSpecsByName.put(jobSpecification.getName(), jobSpecification);
@@ -70,17 +78,5 @@ public class JobFactory {
                 job.finalise();
             }
         }
-    }
-
-    private List<Job> getEntryPoints(List<JobSpecification> jobSpecifications) {
-        ImmutableList.Builder<Job> builder = ImmutableList.builder();
-        for (JobSpecification jobSpecification : jobSpecifications) {
-            if(jobSpecification.getDependencies().isEmpty()) {
-                for (Job job : jobSpecification.getJobs()) {
-                    builder.add(job);
-                }
-            }
-        }
-        return builder.build();
     }
 }

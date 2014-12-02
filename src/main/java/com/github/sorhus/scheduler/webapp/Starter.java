@@ -1,10 +1,13 @@
 package com.github.sorhus.scheduler.webapp;
 
+import com.github.sorhus.scheduler.pipe.PipeService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+
+import java.util.concurrent.Executors;
 
 public class Starter {
 
@@ -14,19 +17,11 @@ public class Starter {
 
         Server jettyServer = new Server(8080);
 
-        ResourceConfig resourceConfig = new ResourceConfig().register(new PipeRestService());
+        PipeRest pipeRest = new PipeRest(new PipeService(Executors.newFixedThreadPool(2)));
+        ResourceConfig resourceConfig = new ResourceConfig().register(pipeRest);
         contextHandler.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/*");
 
         jettyServer.setHandler(contextHandler);
-
-//        ServletHolder jerseyServlet = contextHandler.addServlet(
-//            org.glassfish.jersey.servlet.ServletContainer.class, "/*");
-//        jerseyServlet.setInitOrder(0);
-//
-//        jerseyServlet.setInitParameter(
-//            "jersey.config.server.provider.classnames",
-//            PipeRestService.class.getCanonicalName()
-//        );
 
         try {
             jettyServer.start();
