@@ -1,5 +1,6 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.job.model;
 
+import com.github.sorhus.scheduler.job.runnable.JobLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

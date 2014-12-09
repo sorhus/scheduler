@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.job.model;
 
 import com.google.common.collect.ImmutableList;
 

@@ -1,4 +1,8 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.job.service;
+
+import com.github.sorhus.scheduler.job.model.Job;
+import com.github.sorhus.scheduler.job.model.JobExecution;
+import com.github.sorhus.scheduler.job.runnable.JobFinalizer;
 
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;

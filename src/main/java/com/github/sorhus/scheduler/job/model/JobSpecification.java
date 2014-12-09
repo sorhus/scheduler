@@ -1,17 +1,19 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.job.model;
 
 import java.util.List;
 
 /**
  * @author: anton.sorhus@gmail.com
  */
-public class JobSpecification {
+public class JobSpecification implements Comparable<JobSpecification> {
 
     private String name;
     private String description;
     private List<String> parameters;
     private List<String> dependencies;
     private List<Job> jobs;
+    private int depth = INVALID;
+    private final static int INVALID = -1;
 
     public JobSpecification(String name, String description, List<String> parameters, List<String> dependencies) {
         this.name = name;
@@ -60,10 +62,25 @@ public class JobSpecification {
         this.jobs = jobs;
     }
 
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
 
     @Override
     public String toString() {
         return getName();
+    }
+
+    @Override
+    public int compareTo(JobSpecification that) {
+        if(depth == INVALID) {
+            throw new RuntimeException("Depth not initialised");
+        }
+        return this.depth - that.depth;
     }
 }
 

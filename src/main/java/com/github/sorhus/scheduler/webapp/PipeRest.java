@@ -1,6 +1,7 @@
 package com.github.sorhus.scheduler.webapp;
 
 import com.github.sorhus.scheduler.pipe.PipeService;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +33,11 @@ public class PipeRest {
 
     @GET
     @Path("start")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_HTML)
     public Response start(
         @QueryParam("name") String name,
-        @QueryParam("workers") Integer workers,
-        @QueryParam("specification") List<String> specifications
+        @QueryParam("specification") List<String> specifications,
+        @QueryParam("workers") Integer workers
     ) {
         return pipeService.submit(name, specifications, workers) ?
             Response.status(OK).entity("Pipe started").build() :
@@ -45,17 +46,36 @@ public class PipeRest {
 
     @GET
     @Path("info")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_HTML)
     public Response info(@QueryParam("name") String name) {
         return Response.status(OK).entity(pipeService.info(name)).build();
     }
 
     @GET
-    @Path("abort")
+    @Path("status")
     @Produces(MediaType.APPLICATION_JSON)
+    public Response status(@QueryParam("name") String name) {
+        return Response.status(OK).entity(pipeService.status(name)).build();
+    }
+
+    @GET
+    @Path("abort")
+    @Produces(MediaType.TEXT_HTML)
     public Response abort(@QueryParam("name") String name) {
         pipeService.abort(name);
         return Response.status(OK).build();
+    }
+
+    @GET
+    @Path("test")
+    @Produces(MediaType.TEXT_HTML)
+    public Response test() {
+        List<String> jobSpecsArg = Lists.newArrayList(
+            "{\"name\":\"job_a\",\"description\":\"\",\"parameters\":[\"foo\"],\"dependencies\":[]}",
+            "{\"name\":\"job_b\",\"description\":\"\",\"parameters\":[\"bar\", \"foo\"],\"dependencies\":[\"job_a\"]}",
+            "{\"name\":\"job_c\",\"description\":\"\",\"parameters\":[\"f o o\"],\"dependencies\":[\"job_a\", \"job_b\"]}"
+        );
+        return start("test-pipe", jobSpecsArg, 2);
     }
 
 

@@ -1,9 +1,8 @@
 package com.github.sorhus.scheduler.pipe;
 
-import com.github.sorhus.scheduler.job.JobSpecification;
+import com.github.sorhus.scheduler.job.model.JobContainer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +30,12 @@ public class PipeService {
         this.gson = new Gson();
     }
 
-    public synchronized boolean submit(String name, List<String> specifications, Integer workers) {
+    public synchronized boolean submit(String name, List<String> specificationStrings, Integer workers) {
         try {
-            log.info("Incoming pipe submission: {}. spec size {}", name, specifications.size());
-            List<JobSpecification> jobSpecifications = getJobSpecFromStrings(specifications);
-            log.info("JobSpecifications: {}", Joiner.on(",").join(specifications));
-            Pipe pipe = new Pipe(jobSpecifications, Optional.fromNullable(workers).or(3));
+            log.info("Incoming pipe submission: {}. spec size {}", name, specificationStrings.size());
+            log.info("JobSpecifications: {}", Joiner.on(",").join(specificationStrings));
+            JobContainer jobContainer = new JobContainer(specificationStrings);
+            Pipe pipe = new Pipe(jobContainer, Optional.fromNullable(workers).or(3));
             log.info("Pipe instantiated: {}", pipe);
             pipes.put(name, pipe);
             executorService.submit(pipe);
@@ -57,20 +56,17 @@ public class PipeService {
             "Pipe not found";
     }
 
+    public synchronized String status(String name) {
+        return exists(name) ?
+            pipes.get(name).getJobContainer().toString() :
+            "Pipe not found";
+    }
+
     public synchronized void abort(String name) {
         if(pipes.containsKey(name)) {
             pipes.get(name).abort();
             pipes.remove(name);
         }
-    }
-
-    private List<JobSpecification> getJobSpecFromStrings(List<String> jobSpecs) {
-        ImmutableList.Builder<JobSpecification> builder = ImmutableList.builder();
-        for(String json : jobSpecs) {
-            JobSpecification jobSpecification = gson.fromJson(json, JobSpecification.class);
-            builder.add(jobSpecification);
-        }
-        return builder.build();
     }
 
 }

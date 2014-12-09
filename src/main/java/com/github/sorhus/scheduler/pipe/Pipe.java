@@ -1,12 +1,10 @@
 package com.github.sorhus.scheduler.pipe;
 
-import com.github.sorhus.scheduler.job.Job;
-import com.github.sorhus.scheduler.job.JobContainer;
-import com.github.sorhus.scheduler.job.JobExecutionService;
-import com.github.sorhus.scheduler.job.JobFinaliserService;
-import com.github.sorhus.scheduler.job.JobSpecification;
-import com.github.sorhus.scheduler.job.JobSubmitter;
-import com.google.common.base.Joiner;
+import com.github.sorhus.scheduler.job.model.Job;
+import com.github.sorhus.scheduler.job.model.JobContainer;
+import com.github.sorhus.scheduler.job.service.JobExecutionService;
+import com.github.sorhus.scheduler.job.service.JobFinaliserService;
+import com.github.sorhus.scheduler.job.runnable.JobSubmitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonObject;
@@ -32,16 +30,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Pipe implements Runnable {
 
-    private final int workers;
-
-    private final AtomicBoolean keepRunning;
+    private final JobContainer jobContainer;
     private final Queue<Job> jobQueue;
     private final AtomicInteger jobCounter;
-    private final JobContainer jobContainer;
+    private final List<ExecutorService> executorServices;
+    private final AtomicBoolean keepRunning;
 
-    DateTime startingTime;
+    DateTime startTime;
     DateTime finishTime;
-    List<ExecutorService> executorServices;
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
@@ -51,47 +47,10 @@ public class Pipe implements Runnable {
         .appendSeconds().appendSuffix(" Seconds")
         .toFormatter();
 
-    public Pipe(List<JobSpecification> jobSpecifications, int workers) {
-        this.workers = workers;
-        this.keepRunning = new AtomicBoolean(true);
-        log.info(
-            "New pipe initialising with {} job specifications: {}",
-            jobSpecifications.size(),
-            Joiner.on(", ").join(jobSpecifications)
-        );
-        this.jobContainer = new JobContainer(jobSpecifications);
+    public Pipe(JobContainer jobContainer, int workers) {
+        this.jobContainer = jobContainer;
         this.jobQueue = new ConcurrentLinkedQueue<>();
-        log.info("There were {} jobs in total", jobContainer.getNumberOfJobs());
         this.jobCounter = new AtomicInteger(jobContainer.getNumberOfJobs());
-    }
-
-    @Override
-    public void run() {
-
-        log.info("Kicking off pipe");
-        this.startingTime = DateTime.now();
-        this.executorServices = initialiseExecutorsAndServices(workers, jobQueue, jobCounter);
-
-        for(Job job: jobContainer.getEntryPoints()) {
-            job.setDormant(false);
-            jobQueue.offer(job);
-        }
-
-        awaitCompletion(jobCounter);
-
-        this.finishTime = DateTime.now();
-        log.info("All jobs finished in {}", formatter.print(new Period(startingTime, finishTime)));
-        log.info("GREAT SUCCESS");
-
-        shutDown(executorServices);
-    }
-
-    public void abort() {
-        this.keepRunning.set(false);
-    }
-
-    private List<ExecutorService> initialiseExecutorsAndServices(
-            int workers, Queue<Job> jobQueue, AtomicInteger jobCounter) {
 
         ThreadFactory jobLoggerThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
         ExecutorService jobLoggerExecutorService = Executors.newFixedThreadPool(workers, jobLoggerThreadFactory);
@@ -105,10 +64,31 @@ public class Pipe implements Runnable {
         JobSubmitter jobSubmitter = new JobSubmitter(jobQueue, jobExecutionService, jobFinaliserService, jobCounter);
         new Thread(jobSubmitter, "JobSubmitter-0").start();
 
-        return ImmutableList.of(jobLoggerExecutorService, jobFinaliserExecutorService);
+        this.executorServices = ImmutableList.of(jobLoggerExecutorService, jobFinaliserExecutorService);
+        this.keepRunning = new AtomicBoolean(true);
     }
 
-    private void awaitCompletion(AtomicInteger jobCounter) {
+
+    public void abort() {
+        this.keepRunning.set(false);
+    }
+
+    public JobContainer getJobContainer() {
+        return jobContainer;
+    }
+
+    @Override
+    public void run() {
+
+        // kick off pipe
+        log.info("Kicking off pipe");
+        this.startTime = DateTime.now();
+        for(Job job: jobContainer.getEntryPoints()) {
+            job.setDormant(false);
+            jobQueue.offer(job);
+        }
+
+        // await completion
         while(keepRunning.get() && jobCounter.get() > 0) {
             log.info("Waiting for {} unfinished jobs", jobCounter);
             try {
@@ -116,14 +96,16 @@ public class Pipe implements Runnable {
             } catch (InterruptedException e) {}
         }
 
-    }
+        this.finishTime = DateTime.now();
+        log.info("All jobs finished in {}", formatter.print(new Period(startTime, finishTime)));
+        log.info("GREAT SUCCESS");
 
-    private void shutDown(List<ExecutorService> executorServices) {
+        // shut down
         for (ExecutorService executorService : executorServices) {
             try {
                 executorService.awaitTermination(1000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-            log.warn("ExecutorService {} did not terminate gracefully", executorService, e);
+                log.warn("ExecutorService {} did not terminate gracefully", executorService, e);
             } finally {
                 executorService.shutdownNow();
             }
@@ -137,9 +119,9 @@ public class Pipe implements Runnable {
         json.addProperty("Jobs left", jobCounter.get());
         json.addProperty("Jobs in queue", jobQueue.size());
         if(null == finishTime) {
-            json.addProperty("Elapsed time since start", formatter.print(new Period(startingTime, DateTime.now())));
+            json.addProperty("Elapsed time since start", formatter.print(new Period(startTime, DateTime.now())));
         } else {
-            json.addProperty("Pipe finished in", formatter.print(new Period(startingTime, finishTime)));
+            json.addProperty("Pipe finished in", formatter.print(new Period(startTime, finishTime)));
         }
         return json.toString();
     }

@@ -1,9 +1,8 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.job.runnable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
