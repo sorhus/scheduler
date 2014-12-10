@@ -1,6 +1,8 @@
 package com.github.sorhus.scheduler.job.model;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import java.util.List;
 
@@ -81,6 +83,14 @@ public class Job {
 
     @Override
     public String toString() {
-        return name + (parameters.length() == 0 ? "" : "-" + parameters);
+        return parameters.length() == 0 ? name : name + "-" + parameters;
+    }
+
+    public JsonObject asJson() {
+        JsonObject json = new JsonObject();
+        json.addProperty("name", toString());
+        String status = done ? "done" : dormant ? "dormant" : "running";
+        json.addProperty("status", status);
+        return json;
     }
 }

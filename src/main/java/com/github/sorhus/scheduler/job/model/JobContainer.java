@@ -7,9 +7,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -28,7 +30,6 @@ public class JobContainer {
         this.numberOfJobs = createJobs();
         resolveDependencies();
     }
-
 
     public int getNumberOfJobs() {
         return numberOfJobs;
@@ -72,9 +73,7 @@ public class JobContainer {
         ImmutableList.Builder<Job> builder = ImmutableList.builder();
         for (JobSpecification jobSpecification : specifications.values()) {
             if(jobSpecification.getDependencies().isEmpty()) {
-                for (Job job : jobSpecification.getJobs()) {
-                    builder.add(job);
-                }
+                builder.addAll(jobSpecification.getJobs());
             } else {
                 return builder.build();
             }
@@ -124,16 +123,10 @@ public class JobContainer {
 
     @Override
     public String toString() {
-        Map<String, JsonObject> jsons = new HashMap<>(specifications.size());
-
-        for (JobSpecification jobSpecification : specifications.values()) {
-            JsonObject json = new JsonObject();
-            json.addProperty("name", jobSpecification.getName());
-            for (String dependency : jobSpecification.getDependencies()) {
-//                JobSpecification jobSpecification1 = specifications.get(dependency);
-//                json.get("dependencies").getAsJsonArray().add();
-            }
+        JsonArray jsons = new JsonArray();
+        for (JobSpecification specification : specifications.values()) {
+            jsons.add(specification.asJson());
         }
-        return Joiner.on(",").withKeyValueSeparator(":").join(jsons);
+        return jsons.toString();
     }
 }

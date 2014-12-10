@@ -1,5 +1,10 @@
 package com.github.sorhus.scheduler.job.model;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import java.util.List;
 
 /**
@@ -72,7 +77,23 @@ public class JobSpecification implements Comparable<JobSpecification> {
 
     @Override
     public String toString() {
-        return getName();
+        return name;
+    }
+
+    public JsonObject asJson() {
+        JsonObject json = new JsonObject();
+        json.addProperty("name", name);
+        JsonArray dependencies = new JsonArray();
+        for (String dependency : this.dependencies) {
+            dependencies.add(new JsonPrimitive(dependency));
+        }
+        json.add("dependencies", dependencies);
+        JsonArray jobs = new JsonArray();
+        for (Job job : this.jobs) {
+            jobs.add(job.asJson());
+        }
+        json.add("jobs", jobs);
+        return json;
     }
 
     @Override
