@@ -1,5 +1,7 @@
 package com.github.sorhus.scheduler.job.runnable;
 
+import com.github.sorhus.scheduler.JobQueue;
+import com.github.sorhus.scheduler.job.model.Status;
 import com.github.sorhus.scheduler.job.service.JobExecutionService;
 import com.github.sorhus.scheduler.job.service.JobFinaliserService;
 import com.github.sorhus.scheduler.job.model.Job;
@@ -15,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class JobSubmitter implements Runnable {
 
-    private final Queue<Job> jobQueue;
+    private final JobQueue jobQueue;
     private final JobExecutionService jobExecutionService;
     private final JobFinaliserService jobFinaliserService;
     private final AtomicInteger jobCounter;
@@ -23,7 +25,7 @@ public class JobSubmitter implements Runnable {
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
     public JobSubmitter(
-        Queue<Job> jobQueue,
+        JobQueue jobQueue,
         JobExecutionService jobExecutionService,
         JobFinaliserService jobFinaliserService,
         AtomicInteger jobCounter
@@ -39,9 +41,11 @@ public class JobSubmitter implements Runnable {
         while(jobCounter.get() > 0) {
             if(!jobQueue.isEmpty()) {
                 Job job = jobQueue.poll();
-                log.info("Found Job in queue, submitting: {}", job);
-                JobExecution jobExecution = jobExecutionService.initialiseJob(job);
-                jobFinaliserService.finaliseJob(jobExecution);
+                if(null != job) {
+                    log.info("Found Job in queue, submitting: {}", job);
+                    JobExecution jobExecution = jobExecutionService.initialiseJob(job);
+                    jobFinaliserService.finaliseJob(jobExecution);
+                }
             } else {
                 try {
                     Thread.sleep(3000);

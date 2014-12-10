@@ -1,5 +1,6 @@
 package com.github.sorhus.scheduler.pipe;
 
+import com.github.sorhus.scheduler.JobQueue;
 import com.github.sorhus.scheduler.job.model.Job;
 import com.github.sorhus.scheduler.job.model.JobContainer;
 import com.github.sorhus.scheduler.job.service.JobExecutionService;
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Pipe implements Runnable {
 
     private final JobContainer jobContainer;
-    private final Queue<Job> jobQueue;
+    private final JobQueue jobQueue;
     private final AtomicInteger jobCounter;
     private final List<ExecutorService> executorServices;
     private final AtomicBoolean keepRunning;
@@ -49,7 +50,7 @@ public class Pipe implements Runnable {
 
     public Pipe(JobContainer jobContainer, int workers) {
         this.jobContainer = jobContainer;
-        this.jobQueue = new ConcurrentLinkedQueue<>();
+        this.jobQueue = new JobQueue();
         this.jobCounter = new AtomicInteger(jobContainer.getNumberOfJobs());
 
         ThreadFactory jobLoggerThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
@@ -84,7 +85,6 @@ public class Pipe implements Runnable {
         log.info("Kicking off pipe");
         this.startTime = DateTime.now();
         for(Job job: jobContainer.getEntryPoints()) {
-            job.setDormant(false);
             jobQueue.offer(job);
         }
 

@@ -56,7 +56,7 @@ public class JobExecution {
             boolean success = process.waitFor() == 0;
             jobLogger.shutDown();
             if(success) {
-                job.setDone(true);
+                job.setStatus(Status.DONE);
             }
             return success;
         }

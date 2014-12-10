@@ -17,8 +17,7 @@ public class Job {
     private List<Job> dependencies;
     private List<Job> dependents;
 
-    private boolean done;
-    private boolean dormant;
+    private Status status;
 
     private ImmutableList.Builder<Job> dependenciesBuilder = ImmutableList.builder();
     private ImmutableList.Builder<Job> dependentsBuilder = ImmutableList.builder();
@@ -30,8 +29,7 @@ public class Job {
     public Job(String name, String parameters) {
         this.name = name;
         this.parameters = parameters;
-        this.done = false;
-        this.dormant = true;
+        this.status = Status.WAITING;
     }
 
     public String getName() {
@@ -58,20 +56,12 @@ public class Job {
         dependentsBuilder.add(dependent);
     }
 
-    public void setDone(boolean value) {
-        done = value;
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
-    public boolean isDone() {
-        return done;
-    }
-
-    public void setDormant(boolean value) {
-        dormant = value;
-    }
-
-    public boolean isDormant() {
-        return dormant;
+    public Status getStatus() {
+        return status;
     }
 
     public void finalise() {
@@ -89,8 +79,7 @@ public class Job {
     public JsonObject asJson() {
         JsonObject json = new JsonObject();
         json.addProperty("name", toString());
-        String status = done ? "done" : dormant ? "dormant" : "running";
-        json.addProperty("status", status);
+        json.addProperty("status", status.toString());
         return json;
     }
 }

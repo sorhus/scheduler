@@ -1,5 +1,6 @@
 package com.github.sorhus.scheduler.job.service;
 
+import com.github.sorhus.scheduler.JobQueue;
 import com.github.sorhus.scheduler.job.model.Job;
 import com.github.sorhus.scheduler.job.model.JobExecution;
 import com.github.sorhus.scheduler.job.runnable.JobFinalizer;
@@ -14,10 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class JobFinaliserService {
 
     private final ExecutorService executorService;
-    private final Queue<Job> jobQueue;
+    private final JobQueue jobQueue;
     private final AtomicInteger jobCounter;
 
-    public JobFinaliserService(ExecutorService executorService, Queue<Job> jobQueue, AtomicInteger jobCounter) {
+    public JobFinaliserService(ExecutorService executorService, JobQueue jobQueue, AtomicInteger jobCounter) {
         this.executorService = executorService;
         this.jobQueue = jobQueue;
         this.jobCounter = jobCounter;

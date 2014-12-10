@@ -1,7 +1,9 @@
 package com.github.sorhus.scheduler.job.runnable;
 
+import com.github.sorhus.scheduler.JobQueue;
 import com.github.sorhus.scheduler.job.model.Job;
 import com.github.sorhus.scheduler.job.model.JobExecution;
+import com.github.sorhus.scheduler.job.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,17 +17,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class JobFinalizer implements Runnable {
 
-    private final Queue<Job> jobQueue;
+    private final JobQueue jobQueue;
     private final AtomicInteger jobCounter;
     private final JobExecution jobExec;
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
-    public JobFinalizer(
-        Queue<Job> jobQueue,
-        AtomicInteger jobCounter,
-        JobExecution jobExec
-    ) {
+    public JobFinalizer(JobQueue jobQueue, AtomicInteger jobCounter, JobExecution jobExec) {
         this.jobQueue = jobQueue;
         this.jobCounter = jobCounter;
         this.jobExec = jobExec;
@@ -40,29 +38,25 @@ public class JobFinalizer implements Runnable {
             log.warn("JobExecution {} failed with exception", jobExec, e);
         }
 
+        Job job = jobExec.getJob();
         if(success) {
-            log.info(
-                "Job {} finished, evaluating dependents as candidates for job queue: {}",
-                jobExec,
-                jobExec.getJob().getDependents()
-            );
             jobCounter.decrementAndGet();
-            for (Job candidate : jobExec.getJob().getDependents()) {
+            log.info("Job {} is done, evaluating dependents as candidates for job queue: {}", job, job.getDependents());
+            for (Job candidate : job.getDependents()) {
                 synchronized (candidate) {
-                    boolean approved = candidate.isDormant();
+                    boolean approved = candidate.getStatus() == Status.WAITING;
                     for (Job dependency : candidate.getDependencies()) {
-                        approved &= dependency.isDone();
+                        approved &= dependency.getStatus() == Status.DONE;
                     }
                     if(approved) {
                         log.info("All dependencies for Job {} is done, putting it in job queue", candidate);
-                        candidate.setDormant(false);
                         jobQueue.offer(candidate);
                     }
                 }
             }
         } else {
             log.info("JobExecution failed, adding it back to jobExec queue");
-            jobQueue.offer(jobExec.getJob());
+            jobQueue.offer(job);
         }
     }
 
