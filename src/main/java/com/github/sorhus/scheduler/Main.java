@@ -1,6 +1,5 @@
 package com.github.sorhus.scheduler;
 
-import com.github.sorhus.scheduler.job.model.JobContainer;
 import com.github.sorhus.scheduler.pipe.Pipe;
 import com.google.common.collect.Lists;
 
@@ -19,7 +18,7 @@ public class Main {
             "{\"name\":\"job_c\",\"description\":\"\",\"parameters\":[\"f o o\"],\"dependencies\":[\"job_a\", \"job_b\"]}"
         );
 
-        new Pipe(new JobContainer(specs), 2);
+        new Pipe(specs, 2);
 
     }
 }

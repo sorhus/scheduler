@@ -78,5 +78,21 @@ public class PipeRest {
         return start("test-pipe", jobSpecsArg, 2);
     }
 
+    @GET
+    @Path("pause")
+    @Produces(MediaType.TEXT_HTML)
+    public Response pause(@QueryParam("name") String name, @QueryParam("job") String job) {
+        return pipeService.pause(name, job) ?
+            Response.status(OK).build() :
+            Response.status(BAD_REQUEST).build();
+    }
 
+    @GET
+    @Path("unpause")
+    @Produces(MediaType.TEXT_HTML)
+    public Response unpause(@QueryParam("name") String name, @QueryParam("job") String job) {
+        return pipeService.unpause(name, job) ?
+            Response.status(OK).build() :
+            Response.status(BAD_REQUEST).build();
+    }
 }

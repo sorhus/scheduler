@@ -1,17 +1,14 @@
-package com.github.sorhus.scheduler.job.model;
+package com.github.sorhus.scheduler.job;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -128,5 +125,33 @@ public class JobContainer {
             jsons.add(specification.asJson());
         }
         return jsons.toString();
+    }
+
+    public boolean pause(String name) {
+        boolean success = true;
+        for (Job job : specifications.get(name).getJobs()) {
+            synchronized (job) {
+                if(job.getStatus() != JobStatus.RUNNING && job.getStatus() != JobStatus.DONE) {
+                    job.setStatus(JobStatus.PAUSED);
+                } else {
+                    success = false;
+                }
+            }
+        }
+        return success;
+    }
+
+    public boolean unpause(String name) {
+        boolean success = true;
+        for (Job job : specifications.get(name).getJobs()) {
+            synchronized (job) {
+                if(job.getStatus() == JobStatus.PAUSED) {
+                    // requires new thread to continuously figure out status
+                } else {
+                    success = false;
+                }
+            }
+        }
+        return success;
     }
 }

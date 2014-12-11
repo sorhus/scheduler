@@ -1,27 +1,26 @@
-package com.github.sorhus.scheduler.job.service;
+package com.github.sorhus.scheduler.pipe;
 
-import com.github.sorhus.scheduler.job.model.Job;
-import com.github.sorhus.scheduler.job.model.JobExecution;
-import com.github.sorhus.scheduler.job.runnable.JobLogger;
+import com.github.sorhus.scheduler.job.Job;
+import com.github.sorhus.scheduler.job.JobExecution;
 
 import java.util.concurrent.ExecutorService;
 
 /**
  * @author: anton.sorhus@gmail.com
  */
-public class JobExecutionService {
+public class JobSubmissionService {
 
     private final ExecutorService executorService;
 
-    public JobExecutionService(ExecutorService executorService) {
+    public JobSubmissionService(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
-    public JobExecution initialiseJob(Job job) {
+    public JobExecution submitJob(Job job) {
         JobExecution jobExecution = new JobExecution(job);
         JobLogger jobLogger = new JobLogger(jobExecution.getLogStream());
-        executorService.submit(jobLogger);
         jobExecution.setJobLogger(jobLogger);
+        executorService.submit(jobLogger);
         return jobExecution;
     }
 }

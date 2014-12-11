@@ -1,9 +1,7 @@
 package com.github.sorhus.scheduler.pipe;
 
-import com.github.sorhus.scheduler.job.model.JobContainer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-
 /**
  * @author: anton.sorhus@gmail.com
  */
@@ -20,22 +17,22 @@ public class PipeService {
 
     private final ExecutorService executorService;
     private final Map<String, Pipe> pipes;
-    private final Gson gson;
 
     private final static Logger log = LoggerFactory.getLogger(PipeService.class);
 
     public PipeService(ExecutorService executorService) {
         this.executorService = executorService;
         this.pipes = new HashMap<>();
-        this.gson = new Gson();
     }
 
     public synchronized boolean submit(String name, List<String> specificationStrings, Integer workers) {
         try {
+            if(pipes.containsKey(name)) {
+                throw new RuntimeException("Pipe already submitted");
+            }
             log.info("Incoming pipe submission: {}. spec size {}", name, specificationStrings.size());
             log.info("JobSpecifications: {}", Joiner.on(",").join(specificationStrings));
-            JobContainer jobContainer = new JobContainer(specificationStrings);
-            Pipe pipe = new Pipe(jobContainer, Optional.fromNullable(workers).or(3));
+            Pipe pipe = new Pipe(specificationStrings, Optional.fromNullable(workers).or(3));
             log.info("Pipe instantiated: {}", pipe);
             pipes.put(name, pipe);
             executorService.submit(pipe);
@@ -69,4 +66,11 @@ public class PipeService {
         }
     }
 
+    public boolean pause(String name, String job) {
+        return pipes.containsKey(name) ? pipes.get(name).pause(job) : false;
+    }
+
+    public boolean unpause(String name, String job) {
+        return pipes.containsKey(name) ? pipes.get(name).unpause(job) : false;
+    }
 }

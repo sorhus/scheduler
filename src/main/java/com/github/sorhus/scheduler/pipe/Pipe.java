@@ -1,11 +1,8 @@
 package com.github.sorhus.scheduler.pipe;
 
-import com.github.sorhus.scheduler.JobQueue;
-import com.github.sorhus.scheduler.job.model.Job;
-import com.github.sorhus.scheduler.job.model.JobContainer;
-import com.github.sorhus.scheduler.job.service.JobExecutionService;
-import com.github.sorhus.scheduler.job.service.JobFinaliserService;
-import com.github.sorhus.scheduler.job.runnable.JobSubmitter;
+import com.github.sorhus.scheduler.job.JobQueue;
+import com.github.sorhus.scheduler.job.Job;
+import com.github.sorhus.scheduler.job.JobContainer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonObject;
@@ -17,14 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author: anton.sorhus@gmail.com
@@ -33,9 +26,8 @@ public class Pipe implements Runnable {
 
     private final JobContainer jobContainer;
     private final JobQueue jobQueue;
-    private final AtomicInteger jobCounter;
+    private final PipeControl pipeControl;
     private final List<ExecutorService> executorServices;
-    private final AtomicBoolean keepRunning;
 
     DateTime startTime;
     DateTime finishTime;
@@ -48,30 +40,29 @@ public class Pipe implements Runnable {
         .appendSeconds().appendSuffix(" Seconds")
         .toFormatter();
 
-    public Pipe(JobContainer jobContainer, int workers) {
-        this.jobContainer = jobContainer;
+    public Pipe(List<String> specificationStrings, int workers) {
+        this.jobContainer = new JobContainer(specificationStrings);
         this.jobQueue = new JobQueue();
-        this.jobCounter = new AtomicInteger(jobContainer.getNumberOfJobs());
+        this.pipeControl = new PipeControl(jobContainer.getNumberOfJobs());
 
         ThreadFactory jobLoggerThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
         ExecutorService jobLoggerExecutorService = Executors.newFixedThreadPool(workers, jobLoggerThreadFactory);
-        JobExecutionService jobExecutionService = new JobExecutionService(jobLoggerExecutorService);
+        JobSubmissionService jobSubmissionService = new JobSubmissionService(jobLoggerExecutorService);
 
         ThreadFactory jobFinaliserThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobFinaliser-%d").build();
         ExecutorService jobFinaliserExecutorService = Executors.newFixedThreadPool(workers, jobFinaliserThreadFactory);
-        JobFinaliserService jobFinaliserService =
-            new JobFinaliserService(jobFinaliserExecutorService, jobQueue, jobCounter);
+        JobFinalizingService jobFinalizingService =
+            new JobFinalizingService(jobFinaliserExecutorService, jobQueue, pipeControl);
 
-        JobSubmitter jobSubmitter = new JobSubmitter(jobQueue, jobExecutionService, jobFinaliserService, jobCounter);
-        new Thread(jobSubmitter, "JobSubmitter-0").start();
+        JobQueuePoller jobQueuePoller = new JobQueuePoller(jobQueue, jobSubmissionService, jobFinalizingService, pipeControl);
+        new Thread(jobQueuePoller, "JobQueuePoller-0").start();
 
         this.executorServices = ImmutableList.of(jobLoggerExecutorService, jobFinaliserExecutorService);
-        this.keepRunning = new AtomicBoolean(true);
     }
 
 
     public void abort() {
-        this.keepRunning.set(false);
+        pipeControl.set(false);
     }
 
     public JobContainer getJobContainer() {
@@ -89,8 +80,8 @@ public class Pipe implements Runnable {
         }
 
         // await completion
-        while(keepRunning.get() && jobCounter.get() > 0) {
-            log.info("Waiting for {} unfinished jobs", jobCounter);
+        while(pipeControl.run()) {
+            log.info("Waiting for {} unfinished jobs", pipeControl.jobsLeft());
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {}
@@ -115,8 +106,8 @@ public class Pipe implements Runnable {
     @Override
     public String toString() {
         JsonObject json = new JsonObject();
-        json.addProperty("Jobs complete", jobContainer.getNumberOfJobs() - jobCounter.get());
-        json.addProperty("Jobs left", jobCounter.get());
+        json.addProperty("Jobs complete", pipeControl.jobsDone());
+        json.addProperty("Jobs left", pipeControl.jobsLeft());
         json.addProperty("Jobs in queue", jobQueue.size());
         if(null == finishTime) {
             json.addProperty("Elapsed time since start", formatter.print(new Period(startTime, DateTime.now())));
@@ -124,5 +115,13 @@ public class Pipe implements Runnable {
             json.addProperty("Pipe finished in", formatter.print(new Period(startTime, finishTime)));
         }
         return json.toString();
+    }
+
+    public boolean pause(String job) {
+        return jobContainer.pause(job);
+    }
+
+    public boolean unpause(String job) {
+        return jobContainer.unpause(job);
     }
 }

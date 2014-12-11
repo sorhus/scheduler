@@ -1,12 +1,11 @@
-package com.github.sorhus.scheduler.job.model;
+package com.github.sorhus.scheduler.job;
 
-import com.github.sorhus.scheduler.job.runnable.JobLogger;
+import com.github.sorhus.scheduler.pipe.JobLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author: anton.sorhus@gmail.com
@@ -47,18 +46,20 @@ public class JobExecution {
         this.jobLogger = jobLogger;
     }
 
-    public Boolean get() throws InterruptedException, ExecutionException, IOException {
+    public void await() {
         if(null != e) {
             log.error("Job {} failed", e);
-            return Boolean.FALSE;
         } else {
             log.info("Waiting for {} to complete", this);
-            boolean success = process.waitFor() == 0;
-            jobLogger.shutDown();
-            if(success) {
-                job.setStatus(Status.DONE);
+            try {
+                if(process.waitFor() == 0) {
+                    job.setStatus(JobStatus.DONE);
+                }
+            } catch (InterruptedException e) {
+                log.warn("JobExecution {} failed with exception", job, e);
+            } finally {
+                jobLogger.shutDown();
             }
-            return success;
         }
     }
 

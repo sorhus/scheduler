@@ -1,7 +1,4 @@
-package com.github.sorhus.scheduler;
-
-import com.github.sorhus.scheduler.job.model.Job;
-import com.github.sorhus.scheduler.job.model.Status;
+package com.github.sorhus.scheduler.job;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -19,13 +16,13 @@ public class JobQueue {
     public Job poll() {
         Job job = queue.poll();
         if(null != job) {
-            job.setStatus(Status.RUNNING);
+            job.setStatus(JobStatus.RUNNING);
         }
         return job;
     }
 
     public void offer(Job job) {
-        job.setStatus(Status.QUEUED);
+        job.setStatus(JobStatus.QUEUED);
         queue.offer(job);
     }
 

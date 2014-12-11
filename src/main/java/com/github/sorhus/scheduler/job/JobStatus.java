@@ -1,9 +1,9 @@
-package com.github.sorhus.scheduler.job.model;
+package com.github.sorhus.scheduler.job;
 
 /**
  * @author: anton.sorhus@gmail.com
  */
-public enum Status {
+public enum JobStatus {
     WAITING,
     QUEUED,
     RUNNING,
