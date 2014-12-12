@@ -89,4 +89,8 @@ public class Job {
         json.addProperty("status", status.toString());
         return json;
     }
+
+    public void evaluate() {
+        // figure out if this job has unfinished dependencies or not.
+    }
 }

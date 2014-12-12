@@ -12,9 +12,9 @@ public class JobFinalizingService {
 
     private final ExecutorService executorService;
     private final JobQueue jobQueue;
-    private final PipeControl pipeControl;
+    private final SimplePipeControl pipeControl;
 
-    public JobFinalizingService(ExecutorService executorService, JobQueue jobQueue, PipeControl pipeControl) {
+    public JobFinalizingService(ExecutorService executorService, JobQueue jobQueue, SimplePipeControl pipeControl) {
         this.executorService = executorService;
         this.jobQueue = jobQueue;
         this.pipeControl = pipeControl;

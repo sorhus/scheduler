@@ -14,7 +14,7 @@ public class JobQueuePoller implements Runnable {
     private final JobQueue jobQueue;
     private final JobSubmissionService jobSubmissionService;
     private final JobFinalizingService jobFinalizingService;
-    private final PipeControl pipeControl;
+    private final SimplePipeControl pipeControl;
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
@@ -22,7 +22,7 @@ public class JobQueuePoller implements Runnable {
         JobQueue jobQueue,
         JobSubmissionService jobSubmissionService,
         JobFinalizingService jobFinalizingService,
-        PipeControl pipeControl
+        SimplePipeControl pipeControl
     ) {
         this.jobQueue = jobQueue;
         this.jobSubmissionService = jobSubmissionService;

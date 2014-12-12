@@ -9,6 +9,8 @@ import java.io.InputStream;
 
 /**
  * @author: anton.sorhus@gmail.com
+ *
+ * TODO: make runnable and get rid of JobFinalizer?
  */
 public class JobExecution {
 
@@ -52,8 +54,14 @@ public class JobExecution {
         } else {
             log.info("Waiting for {} to complete", this);
             try {
-                if(process.waitFor() == 0) {
+                int rc = process.waitFor();
+                if(rc == 0) {
                     job.setStatus(JobStatus.DONE);
+                    for (Job candidate : job.getDependents()) {
+                        candidate.evaluate();
+                    }
+                } else {
+                    log.warn("Job {} returned code {}", job, rc);
                 }
             } catch (InterruptedException e) {
                 log.warn("JobExecution {} failed with exception", job, e);

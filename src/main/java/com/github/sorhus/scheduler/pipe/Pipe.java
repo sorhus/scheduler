@@ -26,7 +26,7 @@ public class Pipe implements Runnable {
 
     private final JobContainer jobContainer;
     private final JobQueue jobQueue;
-    private final PipeControl pipeControl;
+    private final SimplePipeControl pipeControl;
     private final List<ExecutorService> executorServices;
 
     DateTime startTime;
@@ -43,7 +43,7 @@ public class Pipe implements Runnable {
     public Pipe(List<String> specificationStrings, int workers) {
         this.jobContainer = new JobContainer(specificationStrings);
         this.jobQueue = new JobQueue();
-        this.pipeControl = new PipeControl(jobContainer.getNumberOfJobs());
+        this.pipeControl = new SimplePipeControl(jobContainer.getNumberOfJobs());
 
         ThreadFactory jobLoggerThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
         ExecutorService jobLoggerExecutorService = Executors.newFixedThreadPool(workers, jobLoggerThreadFactory);

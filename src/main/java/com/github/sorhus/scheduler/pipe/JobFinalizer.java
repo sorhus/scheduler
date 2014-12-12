@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 public class JobFinalizer implements Runnable {
 
     private final JobQueue jobQueue;
-    private final PipeControl pipeControl;
+    private final SimplePipeControl pipeControl;
     private final JobExecution jobExec;
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
-    public JobFinalizer(JobQueue jobQueue, PipeControl pipeControl, JobExecution jobExec) {
+    public JobFinalizer(JobQueue jobQueue, SimplePipeControl pipeControl, JobExecution jobExec) {
         this.jobQueue = jobQueue;
         this.pipeControl = pipeControl;
         this.jobExec = jobExec;
@@ -31,7 +31,7 @@ public class JobFinalizer implements Runnable {
         if(job.getStatus() == JobStatus.DONE) {
             pipeControl.jobDone();
             log.info("Job {} is done, evaluating dependents as candidates for job queue: {}", job, job.getDependents());
-            synchronized (pipeControl) {
+            synchronized (pipeControl) { // or poke the thread that does this..
                 for (Job candidate : job.getDependents()) {
                     if(candidate.available()) {
                         log.info("All dependencies for Job {} is done, putting it in job queue", candidate);
