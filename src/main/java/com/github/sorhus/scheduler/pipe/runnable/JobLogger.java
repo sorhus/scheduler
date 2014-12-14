@@ -26,6 +26,7 @@ public class JobLogger implements Runnable {
         keepRunning.set(false);
     }
 
+    // TODO: print line breaks
     @Override
     public void run() {
         while(keepRunning.get() && null != logStream) {

@@ -11,6 +11,12 @@ import java.io.InputStream;
 
 /**
  * @author: anton.sorhus@gmail.com
+ *
+ * TODO:
+ *   ability to abort
+ *   timeout
+ *   check if done
+ *   force run
  */
 public class JobExecution implements Runnable {
 

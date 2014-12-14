@@ -1,6 +1,5 @@
 package com.github.sorhus.scheduler.job;
 
-import com.github.sorhus.scheduler.pipe.control.JobStatus;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -132,31 +131,4 @@ public class JobContainer {
         return jsons.toString();
     }
 
-    public boolean pause(String name) {
-        boolean success = true;
-        for (Job job : specifications.get(name).getJobs()) {
-            synchronized (job) {
-                if(job.getStatus() != JobStatus.RUNNING && job.getStatus() != JobStatus.DONE) {
-                    job.setStatus(JobStatus.PAUSED);
-                } else {
-                    success = false;
-                }
-            }
-        }
-        return success;
-    }
-
-    public boolean unpause(String name) {
-        boolean success = true;
-        for (Job job : specifications.get(name).getJobs()) {
-            synchronized (job) {
-                if(job.getStatus() == JobStatus.PAUSED) {
-                    // requires new thread to continuously figure out status
-                } else {
-                    success = false;
-                }
-            }
-        }
-        return success;
-    }
 }

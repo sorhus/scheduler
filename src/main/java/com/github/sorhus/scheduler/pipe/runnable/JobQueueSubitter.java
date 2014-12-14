@@ -28,9 +28,7 @@ public class JobQueueSubitter implements Runnable {
         }
     }
 
-    /*
-     * TODO improve
-     */
+    // TODO improve logic
     @Override
     public void run() {
         while (true) {
