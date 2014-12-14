@@ -58,7 +58,7 @@ public class JobSpecification implements Comparable<JobSpecification> {
         this.dependencies = dependencies;
     }
 
-    protected List<Job> getJobs() {
+    public List<Job> getJobs() {
         return jobs;
     }
 

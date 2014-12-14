@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.pipe.control;
 
 /**
  * @author: anton.sorhus@gmail.com
@@ -8,5 +8,6 @@ public enum JobStatus {
     QUEUED,
     RUNNING,
     PAUSED,
+    FAILED,
     DONE
 }

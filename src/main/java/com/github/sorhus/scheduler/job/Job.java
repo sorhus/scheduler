@@ -1,5 +1,6 @@
 package com.github.sorhus.scheduler.job;
 
+import com.github.sorhus.scheduler.pipe.control.JobStatus;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 
@@ -55,7 +56,7 @@ public class Job {
         dependentsBuilder.add(dependent);
     }
 
-    protected void setStatus(JobStatus status) {
+    public void setStatus(JobStatus status) {
         this.status = status;
     }
 
@@ -63,13 +64,6 @@ public class Job {
         return status;
     }
 
-    public boolean available() {
-        boolean available = status == JobStatus.WAITING;
-        for (Job dependency : dependencies) {
-            available &= dependency.getStatus() == JobStatus.DONE;
-        }
-        return available;
-    }
 
     public void finalise() {
         dependencies = dependenciesBuilder.build();
@@ -90,7 +84,5 @@ public class Job {
         return json;
     }
 
-    public void evaluate() {
-        // figure out if this job has unfinished dependencies or not.
-    }
+
 }

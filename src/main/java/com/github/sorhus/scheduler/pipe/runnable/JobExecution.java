@@ -1,6 +1,8 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.pipe.runnable;
 
-import com.github.sorhus.scheduler.pipe.JobLogger;
+import com.github.sorhus.scheduler.job.Job;
+import com.github.sorhus.scheduler.pipe.control.JobStatus;
+import com.github.sorhus.scheduler.pipe.control.PipeControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,12 +11,11 @@ import java.io.InputStream;
 
 /**
  * @author: anton.sorhus@gmail.com
- *
- * TODO: make runnable and get rid of JobFinalizer?
  */
-public class JobExecution {
+public class JobExecution implements Runnable {
 
     private final Job job;
+    private final PipeControl pipeControl;
     private Process process;
     private InputStream logStream;
     private IOException e;
@@ -22,8 +23,9 @@ public class JobExecution {
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
-    public JobExecution(Job job) {
+    public JobExecution(Job job, PipeControl pipeControl) {
         this.job = job;
+        this.pipeControl = pipeControl;
         String[] command = String.format("jobs/%s/run.sh %s", job.getName(), job.getParameters()).trim().split(" ");
         ProcessBuilder processBuilder = new ProcessBuilder()
             .command(command)
@@ -48,7 +50,9 @@ public class JobExecution {
         this.jobLogger = jobLogger;
     }
 
-    public void await() {
+    @Override
+    public void run() {
+        pipeControl.setStatus(job, JobStatus.RUNNING);
         if(null != e) {
             log.error("Job {} failed", e);
         } else {
@@ -56,14 +60,14 @@ public class JobExecution {
             try {
                 int rc = process.waitFor();
                 if(rc == 0) {
-                    job.setStatus(JobStatus.DONE);
-                    for (Job candidate : job.getDependents()) {
-                        candidate.evaluate();
-                    }
+                    pipeControl.done(job);
+                    log.info("Job finished: {}", job);
                 } else {
+                    pipeControl.setStatus(job, JobStatus.FAILED);
                     log.warn("Job {} returned code {}", job, rc);
                 }
             } catch (InterruptedException e) {
+                pipeControl.setStatus(job, JobStatus.FAILED);
                 log.warn("JobExecution {} failed with exception", job, e);
             } finally {
                 jobLogger.shutDown();

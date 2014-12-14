@@ -1,8 +1,11 @@
 package com.github.sorhus.scheduler.pipe;
 
-import com.github.sorhus.scheduler.job.JobQueue;
 import com.github.sorhus.scheduler.job.Job;
 import com.github.sorhus.scheduler.job.JobContainer;
+import com.github.sorhus.scheduler.pipe.control.JobStatus;
+import com.github.sorhus.scheduler.pipe.control.SimplePipeControl;
+import com.github.sorhus.scheduler.pipe.runnable.JobQueuePoller;
+import com.github.sorhus.scheduler.pipe.runnable.JobQueueSubitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonObject;
@@ -14,10 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.Queue;
+import java.util.concurrent.*;
 
 /**
  * @author: anton.sorhus@gmail.com
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class Pipe implements Runnable {
 
     private final JobContainer jobContainer;
-    private final JobQueue jobQueue;
+    private final Queue<Job> jobQueue;
     private final SimplePipeControl pipeControl;
     private final List<ExecutorService> executorServices;
 
@@ -42,27 +43,23 @@ public class Pipe implements Runnable {
 
     public Pipe(List<String> specificationStrings, int workers) {
         this.jobContainer = new JobContainer(specificationStrings);
-        this.jobQueue = new JobQueue();
+        this.jobQueue = new ConcurrentLinkedQueue<>();
         this.pipeControl = new SimplePipeControl(jobContainer.getNumberOfJobs());
 
-        ThreadFactory jobLoggerThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
-        ExecutorService jobLoggerExecutorService = Executors.newFixedThreadPool(workers, jobLoggerThreadFactory);
-        JobSubmissionService jobSubmissionService = new JobSubmissionService(jobLoggerExecutorService);
+        ThreadFactory jobExecutorThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobExecutor-%d").build();
+        ExecutorService jobExecutorService = Executors.newFixedThreadPool(workers, jobExecutorThreadFactory);
+        ThreadFactory logExecutorThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
+        ExecutorService logExecutorService = Executors.newFixedThreadPool(workers, logExecutorThreadFactory);
+        JobSubmissionService jobSubmissionService = new JobSubmissionService(pipeControl, jobExecutorService, logExecutorService);
 
-        ThreadFactory jobFinaliserThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobFinaliser-%d").build();
-        ExecutorService jobFinaliserExecutorService = Executors.newFixedThreadPool(workers, jobFinaliserThreadFactory);
-        JobFinalizingService jobFinalizingService =
-            new JobFinalizingService(jobFinaliserExecutorService, jobQueue, pipeControl);
+        JobQueuePoller jobQueuePoller = new JobQueuePoller(jobQueue, jobSubmissionService, pipeControl);
+        new Thread(jobQueuePoller, "JobQueuePoller").start();
 
-        JobQueuePoller jobQueuePoller = new JobQueuePoller(jobQueue, jobSubmissionService, jobFinalizingService, pipeControl);
-        new Thread(jobQueuePoller, "JobQueuePoller-0").start();
-
-        this.executorServices = ImmutableList.of(jobLoggerExecutorService, jobFinaliserExecutorService);
+        this.executorServices = ImmutableList.of(logExecutorService, jobExecutorService);
     }
 
-
     public void abort() {
-        pipeControl.set(false);
+        pipeControl.kill();
     }
 
     public JobContainer getJobContainer() {
@@ -73,11 +70,9 @@ public class Pipe implements Runnable {
     public void run() {
 
         // kick off pipe
-        log.info("Kicking off pipe");
         this.startTime = DateTime.now();
-        for(Job job: jobContainer.getEntryPoints()) {
-            jobQueue.offer(job);
-        }
+        new Thread(new JobQueueSubitter(jobContainer, jobQueue, pipeControl), "JobQueueSubmitter").start();
+
 
         // await completion
         while(pipeControl.run()) {
@@ -117,11 +112,19 @@ public class Pipe implements Runnable {
         return json.toString();
     }
 
-    public boolean pause(String job) {
-        return jobContainer.pause(job);
+    // TODO
+    public boolean pause(String jobName) {
+//        for (Job job : jobContainer.getSpecifications().get(jobName).getJobs()) {
+//            pipeControl.setStatus(job, JobStatus.PAUSED);
+//        }
+        return true;
     }
 
-    public boolean unpause(String job) {
-        return jobContainer.unpause(job);
+    // TODO
+    public boolean unpause(String jobName) {
+//        for (Job job : jobContainer.getSpecifications().get(jobName).getJobs()) {
+//            pipeControl.setStatus(job, JobStatus.WAITING);
+//        }
+        return true;
     }
 }

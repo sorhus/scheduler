@@ -1,5 +1,6 @@
 package com.github.sorhus.scheduler.job;
 
+import com.github.sorhus.scheduler.pipe.control.JobStatus;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -30,6 +31,10 @@ public class JobContainer {
 
     public int getNumberOfJobs() {
         return numberOfJobs;
+    }
+
+    public Map<String, JobSpecification> getSpecifications() {
+        return specifications;
     }
 
     private Map<String, JobSpecification> getJobSpecificationsFromStrings(List<String> specificationString) {

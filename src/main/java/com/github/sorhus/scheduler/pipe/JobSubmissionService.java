@@ -1,26 +1,33 @@
 package com.github.sorhus.scheduler.pipe;
 
 import com.github.sorhus.scheduler.job.Job;
-import com.github.sorhus.scheduler.job.JobExecution;
+import com.github.sorhus.scheduler.pipe.runnable.JobExecution;
+import com.github.sorhus.scheduler.pipe.control.PipeControl;
+import com.github.sorhus.scheduler.pipe.runnable.JobLogger;
 
 import java.util.concurrent.ExecutorService;
 
 /**
- * @author: anton.sorhus@gmail.com
+ * @author Anton Sorhus <anton.sorhus@visualdna.com>
  */
 public class JobSubmissionService {
 
-    private final ExecutorService executorService;
+    private final PipeControl pipeControl;
+    private final ExecutorService jobExecutorService;
+    private final ExecutorService logExecutorService;
 
-    public JobSubmissionService(ExecutorService executorService) {
-        this.executorService = executorService;
+    public JobSubmissionService(PipeControl pipeControl, ExecutorService jobExecutorService, ExecutorService logExecutorService) {
+        this.pipeControl = pipeControl;
+        this.jobExecutorService = jobExecutorService;
+        this.logExecutorService = logExecutorService;
     }
 
-    public JobExecution submitJob(Job job) {
-        JobExecution jobExecution = new JobExecution(job);
+    public void submitJob(Job job) {
+        JobExecution jobExecution = new JobExecution(job, pipeControl);
         JobLogger jobLogger = new JobLogger(jobExecution.getLogStream());
         jobExecution.setJobLogger(jobLogger);
-        executorService.submit(jobLogger);
-        return jobExecution;
+        logExecutorService.submit(jobLogger);
+        jobExecutorService.submit(jobExecution);
     }
+
 }
