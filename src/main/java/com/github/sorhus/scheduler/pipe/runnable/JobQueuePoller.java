@@ -19,11 +19,7 @@ public class JobQueuePoller implements Runnable {
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
-    public JobQueuePoller(
-        Queue<Job> jobQueue,
-        JobSubmissionService jobSubmissionService,
-        SimplePipeControl pipeControl
-    ) {
+    public JobQueuePoller(Queue<Job> jobQueue, JobSubmissionService jobSubmissionService, SimplePipeControl pipeControl) {
         this.jobQueue = jobQueue;
         this.jobSubmissionService = jobSubmissionService;
         this.pipeControl = pipeControl;

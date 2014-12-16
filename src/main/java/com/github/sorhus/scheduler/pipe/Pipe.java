@@ -2,10 +2,9 @@ package com.github.sorhus.scheduler.pipe;
 
 import com.github.sorhus.scheduler.job.Job;
 import com.github.sorhus.scheduler.job.JobContainer;
-import com.github.sorhus.scheduler.pipe.control.JobStatus;
 import com.github.sorhus.scheduler.pipe.control.SimplePipeControl;
 import com.github.sorhus.scheduler.pipe.runnable.JobQueuePoller;
-import com.github.sorhus.scheduler.pipe.runnable.JobQueueSubitter;
+import com.github.sorhus.scheduler.pipe.runnable.JobQueueSubmitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonObject;
@@ -22,12 +21,17 @@ import java.util.concurrent.*;
 
 /**
  * @author: anton.sorhus@gmail.com
+ *
+ * TODO: Make sleep times configurable
+ * TODO: External PipeControl
  */
 public class Pipe implements Runnable {
 
     private final JobContainer jobContainer;
     private final Queue<Job> jobQueue;
     private final SimplePipeControl pipeControl;
+    private final JobQueueSubmitter jobQueueSubmitter;
+    private final JobQueuePoller jobQueuePoller;
     private final List<ExecutorService> executorServices;
 
     DateTime startTime;
@@ -45,17 +49,16 @@ public class Pipe implements Runnable {
         this.jobContainer = new JobContainer(specificationStrings);
         this.jobQueue = new ConcurrentLinkedQueue<>();
         this.pipeControl = new SimplePipeControl(jobContainer.getNumberOfJobs());
+        this.jobQueueSubmitter = new JobQueueSubmitter(jobContainer.getEntryPoints(), jobQueue, pipeControl);
 
         ThreadFactory jobExecutorThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobExecutor-%d").build();
         ExecutorService jobExecutorService = Executors.newFixedThreadPool(workers, jobExecutorThreadFactory);
         ThreadFactory logExecutorThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
         ExecutorService logExecutorService = Executors.newFixedThreadPool(workers, logExecutorThreadFactory);
-        JobSubmissionService jobSubmissionService = new JobSubmissionService(pipeControl, jobExecutorService, logExecutorService);
+        JobSubmissionService jobSubmissionService = new JobSubmissionService(pipeControl, jobQueueSubmitter, jobExecutorService, logExecutorService);
 
-        JobQueuePoller jobQueuePoller = new JobQueuePoller(jobQueue, jobSubmissionService, pipeControl);
-        new Thread(jobQueuePoller, "JobQueuePoller").start();
-
-        this.executorServices = ImmutableList.of(logExecutorService, jobExecutorService);
+        this.jobQueuePoller = new JobQueuePoller(jobQueue, jobSubmissionService, pipeControl);
+        this.executorServices = ImmutableList.of(jobExecutorService, logExecutorService);
     }
 
     public void abort() {
@@ -71,14 +74,14 @@ public class Pipe implements Runnable {
 
         // kick off pipe
         this.startTime = DateTime.now();
-        new Thread(new JobQueueSubitter(jobContainer, jobQueue, pipeControl), "JobQueueSubmitter").start();
-
+        jobQueueSubmitter.start();
+        new Thread(jobQueuePoller, "JobQueuePoller").start();
 
         // await completion
         while(pipeControl.run()) {
             log.info("Waiting for {} unfinished jobs", pipeControl.jobsLeft());
             try {
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             } catch (InterruptedException e) {}
         }
 

@@ -1,6 +1,7 @@
 package com.github.sorhus.scheduler.pipe.control;
 
 import com.github.sorhus.scheduler.job.Job;
+import com.github.sorhus.scheduler.job.JobStatus;
 
 /**
  * @author: anton.sorhus@gmail.com
@@ -59,5 +60,10 @@ public class SimplePipeControl extends PipeControl {
     public void done(Job job) {
         setStatus(job, JobStatus.DONE);
         jobsDone++;
+    }
+
+    @Override
+    public boolean isDone(Job job) {
+        return job.getStatus() == JobStatus.DONE;
     }
 }

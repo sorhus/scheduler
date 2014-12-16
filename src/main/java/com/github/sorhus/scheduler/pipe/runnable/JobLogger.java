@@ -38,9 +38,10 @@ public class JobLogger implements Runnable {
                     log.info(new String(buffer));
                     len = logStream.available();
                 }
+                Thread.sleep(1000);
             } catch (IOException e) {
                 log.warn("Unable to log, {}", log.getName(), e);
-            }
+            } catch (InterruptedException e) {}
         }
     }
 }

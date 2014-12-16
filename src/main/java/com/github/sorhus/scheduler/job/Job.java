@@ -1,6 +1,5 @@
 package com.github.sorhus.scheduler.job;
 
-import com.github.sorhus.scheduler.pipe.control.JobStatus;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 
@@ -44,7 +43,7 @@ public class Job {
         return dependencies;
     }
 
-    public void addDependency(Job dependency) {
+    protected void addDependency(Job dependency) {
         dependenciesBuilder.add(dependency);
     }
 
@@ -52,7 +51,7 @@ public class Job {
         return dependents;
     }
 
-    public void addDependent(Job dependent) {
+    protected void addDependent(Job dependent) {
         dependentsBuilder.add(dependent);
     }
 
@@ -64,8 +63,7 @@ public class Job {
         return status;
     }
 
-
-    public void finalise() {
+    protected void finalise() {
         dependencies = dependenciesBuilder.build();
         dependenciesBuilder = null;
         dependents = dependentsBuilder.build();
