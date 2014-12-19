@@ -4,30 +4,33 @@ import com.github.sorhus.scheduler.job.Job;
 import com.github.sorhus.scheduler.pipe.control.PipeControl;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author: anton.sorhus@gmail.com
  */
 public class JobQueueSubmitter extends Thread {
 
-    private final Queue<Job> jobQueue;
     private final PipeControl pipeControl;
+    private final Queue<Job> jobQueue;
+    private final int sleep;
     private final Set<Job> candidates;
 
     private final Logger log = LoggerFactory.getLogger("Pipe");
 
-    public JobQueueSubmitter(Iterable<Job> entryPoints, Queue<Job> jobQueue, PipeControl pipeControl) {
+    public JobQueueSubmitter(Iterable<Job> entryPoints, PipeControl pipeControl, Queue<Job> jobQueue, int sleep) {
         super("JobQueueSubmitter");
-        this.jobQueue = jobQueue;
         this.pipeControl = pipeControl;
-        this.candidates = new ConcurrentHashSet<>();
+        this.jobQueue = jobQueue;
+        this.sleep = sleep;
+        this.candidates = Collections.newSetFromMap(new ConcurrentHashMap<Job, Boolean>());
         for(Job job : entryPoints) {
             if(pipeControl.available(job)) {
                 jobQueue.offer(job);
@@ -58,7 +61,7 @@ public class JobQueueSubmitter extends Thread {
                 }
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(sleep);
             } catch (InterruptedException e) {
                 log.info("Sleep interrupted. Candidates contains: {{}}", Joiner.on(",").join(candidates));
             }

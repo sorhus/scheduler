@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -32,7 +33,9 @@ public class PipeService {
             }
             log.info("Incoming pipe submission: {}. spec size {}", name, specificationStrings.size());
             log.info("JobSpecifications: {}", Joiner.on(",").join(specificationStrings));
-            Pipe pipe = new Pipe(specificationStrings, Optional.fromNullable(workers).or(3));
+            Properties properties = new Properties();
+            properties.setProperty("pipe.numberOfWorkers", String.valueOf(workers));
+            Pipe pipe = new Pipe(specificationStrings, new SimplePipeControlFactory(), properties);
             log.info("Pipe instantiated: {}", pipe);
             pipes.put(name, pipe);
             executorService.submit(pipe);

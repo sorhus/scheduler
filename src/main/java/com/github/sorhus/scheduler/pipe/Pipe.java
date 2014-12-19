@@ -2,7 +2,9 @@ package com.github.sorhus.scheduler.pipe;
 
 import com.github.sorhus.scheduler.job.Job;
 import com.github.sorhus.scheduler.job.JobContainer;
+import com.github.sorhus.scheduler.pipe.control.PipeControl;
 import com.github.sorhus.scheduler.pipe.control.SimplePipeControl;
+import com.github.sorhus.scheduler.pipe.runnable.JobExecutionFactory;
 import com.github.sorhus.scheduler.pipe.runnable.JobQueuePoller;
 import com.github.sorhus.scheduler.pipe.runnable.JobQueueSubmitter;
 import com.google.common.collect.ImmutableList;
@@ -16,12 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.*;
 
 /**
  * @author: anton.sorhus@gmail.com
  *
+ * TODO: Wire with spring
  * TODO: Make sleep times configurable
  * TODO: External PipeControl
  */
@@ -29,7 +33,7 @@ public class Pipe implements Runnable {
 
     private final JobContainer jobContainer;
     private final Queue<Job> jobQueue;
-    private final SimplePipeControl pipeControl;
+    private final PipeControl pipeControl;
     private final JobQueueSubmitter jobQueueSubmitter;
     private final JobQueuePoller jobQueuePoller;
     private final List<ExecutorService> executorServices;
@@ -45,19 +49,30 @@ public class Pipe implements Runnable {
         .appendSeconds().appendSuffix(" Seconds")
         .toFormatter();
 
-    public Pipe(List<String> specificationStrings, int workers) {
+    public Pipe(List<String> specificationStrings, PipeControlFactory pipeControlFactory, Properties properties) {
         this.jobContainer = new JobContainer(specificationStrings);
         this.jobQueue = new ConcurrentLinkedQueue<>();
-        this.pipeControl = new SimplePipeControl(jobContainer.getNumberOfJobs());
-        this.jobQueueSubmitter = new JobQueueSubmitter(jobContainer.getEntryPoints(), jobQueue, pipeControl);
+        properties.setProperty("pipe.numberOfJobs", String.valueOf(jobContainer.getNumberOfJobs()));
+        this.pipeControl = pipeControlFactory.getPipeControl(properties);
+
+        int jobQueueSleep = Integer.parseInt(properties.getProperty("pipe.jobQueueSleep", "1000"));
+        this.jobQueueSubmitter =
+            new JobQueueSubmitter(jobContainer.getEntryPoints(), pipeControl, jobQueue, jobQueueSleep);
+
+        int numberOfWorkers = Integer.parseInt(properties.getProperty("pipe.numberOfWorkers", "3"));
 
         ThreadFactory jobExecutorThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobExecutor-%d").build();
-        ExecutorService jobExecutorService = Executors.newFixedThreadPool(workers, jobExecutorThreadFactory);
+        ExecutorService jobExecutorService = Executors.newFixedThreadPool(numberOfWorkers, jobExecutorThreadFactory);
         ThreadFactory logExecutorThreadFactory = new ThreadFactoryBuilder().setNameFormat("JobLogger-%d").build();
-        ExecutorService logExecutorService = Executors.newFixedThreadPool(workers, logExecutorThreadFactory);
-        JobSubmissionService jobSubmissionService = new JobSubmissionService(pipeControl, jobQueueSubmitter, jobExecutorService, logExecutorService);
+        ExecutorService logExecutorService = Executors.newFixedThreadPool(numberOfWorkers, logExecutorThreadFactory);
 
-        this.jobQueuePoller = new JobQueuePoller(jobQueue, jobSubmissionService, pipeControl);
+        int jobLoggerSleep = Integer.parseInt(properties.getProperty("pipe.jobLoggerSleep", "1000"));
+        JobExecutionFactory jobExecutionFactory =
+            new JobExecutionFactory(pipeControl, jobQueueSubmitter, jobLoggerSleep);
+
+        int jobQueuePollerSleep = Integer.parseInt(properties.getProperty("pipe.jobQueuePollerSleep", "1000"));
+        this.jobQueuePoller = new JobQueuePoller(pipeControl, jobQueue, jobExecutorService,
+            logExecutorService, jobExecutionFactory, jobQueuePollerSleep);
         this.executorServices = ImmutableList.of(jobExecutorService, logExecutorService);
     }
 

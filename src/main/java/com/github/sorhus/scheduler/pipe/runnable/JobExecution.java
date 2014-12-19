@@ -12,22 +12,20 @@ import java.io.InputStream;
 /**
  * @author: anton.sorhus@gmail.com
  *
- * TODO:
- *   ability to abort
- *   timeout
- *   check if done
- *   force run
+ * TODO: ability to abort
+ * TODO: timeout
+ * TODO: check if done
+ * TODO: force run
  */
 public class JobExecution implements Runnable {
 
     private final Job job;
     private final PipeControl pipeControl;
-    private Process process;
-    private InputStream logStream;
-    private IOException e;
-    private JobLogger jobLogger;
-
     private final JobQueueSubmitter jobQueueSubmitter;
+
+    private Process process;
+    private JobLogger jobLogger;
+    private IOException e;
 
     private final static Logger log = LoggerFactory.getLogger("Pipe");
 
@@ -41,7 +39,6 @@ public class JobExecution implements Runnable {
             .redirectErrorStream(true);
         try {
             this.process = processBuilder.start();
-            this.logStream = process.getInputStream();
         } catch (IOException e) {
             this.e = e;
         }
@@ -51,12 +48,16 @@ public class JobExecution implements Runnable {
         return job;
     }
 
-    public InputStream getLogStream() {
-        return logStream;
+    public InputStream getProcessInputStream() {
+        return process.getInputStream();
     }
 
     public void setJobLogger(JobLogger jobLogger) {
         this.jobLogger = jobLogger;
+    }
+
+    public JobLogger getJobLogger() {
+        return jobLogger;
     }
 
     @Override
