@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler.webapp;
+package com.github.sorhus.scheduler.app;
 
 import com.github.sorhus.scheduler.pipe.PipeService;
 import com.google.common.collect.Lists;
@@ -20,14 +20,14 @@ import static javax.ws.rs.core.Response.Status.OK;
 /**
  * @author: anton.sorhus@gmail.com
  */
-@Path("pipe")
-public class PipeRest {
+@Path("")
+public class PipeAPI {
 
     private final PipeService pipeService;
     private final Gson gson = new Gson();
-    private final Logger log = LoggerFactory.getLogger(PipeRest.class);
+    private final Logger log = LoggerFactory.getLogger(PipeAPI.class);
 
-    public PipeRest(PipeService pipeService) {
+    public PipeAPI(PipeService pipeService) {
         this.pipeService = pipeService;
     }
 
@@ -55,6 +55,7 @@ public class PipeRest {
     @Path("status")
     @Produces(MediaType.APPLICATION_JSON)
     public Response status(@QueryParam("name") String name) {
+        log.info("Incoming status request, name={}",name);
         return Response.status(OK).entity(pipeService.status(name)).build();
     }
 

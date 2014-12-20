@@ -12,7 +12,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.3.0.M1</jetty.version>
+    <jetty.version>9.2.6.v20141205</jetty.version>
+    <jersey.version>2.14</jersey.version>
     <spring.version>3.2.0.RELEASE</spring.version>
   </properties>
 
@@ -38,10 +39,8 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <!--<packageName>com.github.sorhus.scheduler</packageName>-->
-              <!--<mainClass>com.github.sorhus.scheduler.Main</mainClass>-->
-              <packageName>com.github.sorhus.scheduler.webapp</packageName>
-              <mainClass>com.github.sorhus.scheduler.webapp.Starter</mainClass>
+              <packageName>com.github.sorhus.scheduler.app</packageName>
+              <mainClass>com.github.sorhus.scheduler.app.Main</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -79,41 +78,11 @@
       <artifactId>joda-time</artifactId>
       <version>2.3</version>
     </dependency>
-
-    <!--<dependency>-->
-      <!--<groupId>javax.inject</groupId>-->
-      <!--<artifactId>javax.inject</artifactId>-->
-      <!--<version>1</version>-->
-    <!--</dependency>-->
-
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-jaxrs</artifactId>
-      <version>1.9.11</version>
-    </dependency>
-
     <!--<dependency>-->
       <!--<groupId>org.codehaus.jackson</groupId>-->
-      <!--<artifactId>jackson-mapper-asl</artifactId>-->
+      <!--<artifactId>jackson-jaxrs</artifactId>-->
       <!--<version>1.9.11</version>-->
     <!--</dependency>-->
-
-    <!--<dependency>-->
-      <!--<groupId>org.springframework</groupId>-->
-      <!--<artifactId>spring-core</artifactId>-->
-      <!--<version>${spring.version}</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>org.springframework</groupId>-->
-      <!--<artifactId>spring-context</artifactId>-->
-      <!--<version>${spring.version}</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>org.springframework</groupId>-->
-      <!--<artifactId>spring-web</artifactId>-->
-      <!--<version>${spring.version}</version>-->
-    <!--</dependency>-->
-
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
@@ -127,19 +96,18 @@
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>2.13</version>
+      <version>${jersey.version}</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
       <artifactId>jersey-container-servlet-core</artifactId>
-      <version>2.13</version>
+      <version>${jersey.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.glassfish.jersey.containers</groupId>
-      <artifactId>jersey-container-jetty-http</artifactId>
-      <version>2.13</version>
-    </dependency>
-
+    <!--<dependency>-->
+      <!--<groupId>org.glassfish.jersey.containers</groupId>-->
+      <!--<artifactId>jersey-container-jetty-http</artifactId>-->
+      <!--<version>2.13</version>-->
+    <!--</dependency>-->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
