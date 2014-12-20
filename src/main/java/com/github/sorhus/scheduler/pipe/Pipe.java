@@ -3,7 +3,7 @@ package com.github.sorhus.scheduler.pipe;
 import com.github.sorhus.scheduler.job.Job;
 import com.github.sorhus.scheduler.job.JobContainer;
 import com.github.sorhus.scheduler.pipe.control.PipeControl;
-import com.github.sorhus.scheduler.pipe.control.SimplePipeControl;
+import com.github.sorhus.scheduler.pipe.control.PipeControlFactory;
 import com.github.sorhus.scheduler.pipe.runnable.JobExecutionFactory;
 import com.github.sorhus.scheduler.pipe.runnable.JobQueuePoller;
 import com.github.sorhus.scheduler.pipe.runnable.JobQueueSubmitter;
@@ -17,6 +17,10 @@ import org.joda.time.format.PeriodFormatterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.Queue;
@@ -25,9 +29,6 @@ import java.util.concurrent.*;
 /**
  * @author: anton.sorhus@gmail.com
  *
- * TODO: Wire with spring
- * TODO: Make sleep times configurable
- * TODO: External PipeControl
  */
 public class Pipe implements Runnable {
 
@@ -130,19 +131,4 @@ public class Pipe implements Runnable {
         return json.toString();
     }
 
-    // TODO
-    public boolean pause(String jobName) {
-//        for (Job job : jobContainer.getSpecifications().get(jobName).getJobs()) {
-//            pipeControl.setStatus(job, JobStatus.PAUSED);
-//        }
-        return true;
-    }
-
-    // TODO
-    public boolean unpause(String jobName) {
-//        for (Job job : jobContainer.getSpecifications().get(jobName).getJobs()) {
-//            pipeControl.setStatus(job, JobStatus.WAITING);
-//        }
-        return true;
-    }
 }

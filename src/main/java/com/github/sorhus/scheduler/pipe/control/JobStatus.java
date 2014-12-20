@@ -1,4 +1,4 @@
-package com.github.sorhus.scheduler.job;
+package com.github.sorhus.scheduler.pipe.control;
 
 /**
  * @author: anton.sorhus@gmail.com

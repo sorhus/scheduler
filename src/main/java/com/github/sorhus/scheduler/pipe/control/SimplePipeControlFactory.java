@@ -1,7 +1,4 @@
-package com.github.sorhus.scheduler.pipe;
-
-import com.github.sorhus.scheduler.pipe.control.PipeControl;
-import com.github.sorhus.scheduler.pipe.control.SimplePipeControl;
+package com.github.sorhus.scheduler.pipe.control;
 
 import java.util.Properties;
 

@@ -1,10 +1,11 @@
 package com.github.sorhus.scheduler.pipe.control;
 
 import com.github.sorhus.scheduler.job.Job;
-import com.github.sorhus.scheduler.job.JobStatus;
 
 /**
  * @author Anton Sorhus <anton.sorhus@visualdna.com>
+ *
+ * TODO: External PipeControl
  */
 public abstract class PipeControl {
 

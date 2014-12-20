@@ -1,7 +1,7 @@
 package com.github.sorhus.scheduler.pipe;
 
+import com.github.sorhus.scheduler.pipe.control.SimplePipeControlFactory;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,11 +69,4 @@ public class PipeService {
         }
     }
 
-    public boolean pause(String name, String job) {
-        return pipes.containsKey(name) ? pipes.get(name).pause(job) : false;
-    }
-
-    public boolean unpause(String name, String job) {
-        return pipes.containsKey(name) ? pipes.get(name).unpause(job) : false;
-    }
 }

@@ -1,7 +1,9 @@
 package com.github.sorhus.scheduler.pipe.control;
 
 import com.github.sorhus.scheduler.job.Job;
-import com.github.sorhus.scheduler.job.JobStatus;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author: anton.sorhus@gmail.com
@@ -10,11 +12,13 @@ public class SimplePipeControl extends PipeControl {
 
     private int jobsDone;
     private boolean run;
+    private final Map<Job, JobStatus> status;
 
     public SimplePipeControl(int nJobs) {
         super(nJobs);
         this.jobsDone = 0;
         this.run = true;
+        this.status = new HashMap<>();
     }
 
     public int jobsLeft() {
@@ -35,17 +39,21 @@ public class SimplePipeControl extends PipeControl {
 
     @Override
     public void setStatus(Job job, JobStatus jobStatus) {
-        job.setStatus(jobStatus);
+        status.put(job, jobStatus);
     }
 
     @Override
     public JobStatus getStatus(Job job) {
-        return job.getStatus();
+        //TODO: fix hack
+        if(!status.containsKey(job)) {
+            setStatus(job, JobStatus.WAITING);
+        }
+        return status.get(job);
     }
 
     @Override
     public boolean available(Job job) {
-        boolean available = job.getStatus() == JobStatus.WAITING || job.getStatus() == JobStatus.FAILED;
+        boolean available = getStatus(job) == JobStatus.WAITING || getStatus(job) == JobStatus.FAILED;
         for (Job dependency : job.getDependencies()) {
             available &= getStatus(dependency) == JobStatus.DONE;
         }
@@ -64,6 +72,6 @@ public class SimplePipeControl extends PipeControl {
 
     @Override
     public boolean isDone(Job job) {
-        return job.getStatus() == JobStatus.DONE;
+        return getStatus(job) == JobStatus.DONE;
     }
 }

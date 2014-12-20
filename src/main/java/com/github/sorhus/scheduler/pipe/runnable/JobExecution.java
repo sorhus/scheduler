@@ -1,7 +1,7 @@
 package com.github.sorhus.scheduler.pipe.runnable;
 
 import com.github.sorhus.scheduler.job.Job;
-import com.github.sorhus.scheduler.job.JobStatus;
+import com.github.sorhus.scheduler.pipe.control.JobStatus;
 import com.github.sorhus.scheduler.pipe.control.PipeControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

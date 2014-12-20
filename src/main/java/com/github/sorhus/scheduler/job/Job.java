@@ -16,8 +16,6 @@ public class Job {
     private List<Job> dependencies;
     private List<Job> dependents;
 
-    private JobStatus status;
-
     private ImmutableList.Builder<Job> dependenciesBuilder = ImmutableList.builder();
     private ImmutableList.Builder<Job> dependentsBuilder = ImmutableList.builder();
 
@@ -28,7 +26,6 @@ public class Job {
     public Job(String name, String parameters) {
         this.name = name;
         this.parameters = parameters;
-        this.status = JobStatus.WAITING;
     }
 
     public String getName() {
@@ -55,14 +52,6 @@ public class Job {
         dependentsBuilder.add(dependent);
     }
 
-    public void setStatus(JobStatus status) {
-        this.status = status;
-    }
-
-    public JobStatus getStatus() {
-        return status;
-    }
-
     protected void finalise() {
         dependencies = dependenciesBuilder.build();
         dependenciesBuilder = null;
@@ -78,7 +67,6 @@ public class Job {
     public JsonObject asJson() {
         JsonObject json = new JsonObject();
         json.addProperty("name", toString());
-        json.addProperty("status", status.toString());
         return json;
     }
 
