@@ -45,6 +45,13 @@ public class PipeAPI {
     }
 
     @GET
+    @Path("/all")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response all() {
+        return Response.status(OK).entity(pipeService.all()).build();
+    }
+
+    @GET
     @Path("info")
     @Produces(MediaType.TEXT_HTML)
     public Response info(@QueryParam("name") String name) {

@@ -2,10 +2,14 @@ package com.github.sorhus.scheduler.pipe;
 
 import com.github.sorhus.scheduler.pipe.control.SimplePipeControlFactory;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,11 +23,14 @@ public class PipeService {
     private final ExecutorService executorService;
     private final Map<String, Pipe> pipes;
 
+    private final Gson gson;
     private final static Logger log = LoggerFactory.getLogger(PipeService.class);
 
     public PipeService(ExecutorService executorService) {
         this.executorService = executorService;
         this.pipes = new HashMap<>();
+        pipes.put("foo",new Pipe(new LinkedList<String>(), new SimplePipeControlFactory(), new Properties()));
+        this.gson = new Gson();
     }
 
     public synchronized boolean submit(String name, List<String> specificationStrings, Integer workers) {
@@ -69,4 +76,7 @@ public class PipeService {
         }
     }
 
+    public String all() {
+        return gson.toJson(ImmutableMap.builder().put("pipes", pipes.keySet()).build());
+    }
 }
